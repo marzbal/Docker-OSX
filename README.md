@@ -1924,3 +1924,339 @@ You may when initialising or booting into a container see errors from the `(qemu
 `ALSA lib blahblahblah: (function name) returned error: no such file or directory`. These are more or less expected. As long as you are able to boot into the container and everything is working, no reason to worry about these.
 
 See also: [here](https://github.com/sickcodes/Docker-OSX/issues/174).
+```bash
+docker run -it \
+    --device /dev/kvm \
+    --device /dev/snd \
+    -p 50922:10022 \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    -e "DISPLAY=${DISPLAY:-:0.0}" \
+    sickcodes/docker-osx:latest
+
+# turn on SSH after you've installed OS X in the "Sharing" settings.
+ssh user@localhost -p 50922
+```
+
+#### Autoboot into OS X after you've installed everything
+
+Add the extra option `-e NOPICKER=true`.
+
+Old machines:
+
+```bash
+# find your containerID
+docker ps
+
+# move the no picker script on top of the Launch script
+# NEW CONTAINERS
+docker exec containerID mv ./Launch-nopicker.sh ./Launch.sh
+
+# VNC-VERSION-CONTAINER
+docker exec containerID mv ./Launch-nopicker.sh ./Launch_custom.sh
+
+# LEGACY CONTAINERS
+docker exec containerID bash -c "grep -v InstallMedia ./Launch.sh > ./Launch-nopicker.sh
+chmod +x ./Launch-nopicker.sh
+sed -i -e s/OpenCore\.qcow2/OpenCore\-nopicker\.qcow2/ ./Launch-nopicker.sh
+"
+```
+
+
+
+### The big-sur image starts slowly after installation. Is this expected?
+
+Automatic updates are still on in the container's settings. You may wish to turn them off. [We have future plans for development around this.](https://github.com/sickcodes/Docker-OSX/issues/227)
+
+### What is `${DISPLAY:-:0.0}`?
+
+`$DISPLAY` is the shell variable that refers to your X11 display server.
+
+`${DISPLAY}` is the same, but allows you to join variables like this:
+
+- e.g. `${DISPLAY}_${DISPLAY}` would print `:0.0_:0.0`
+- e.g. `$DISPLAY_$DISPLAY`     would print `:0.0`
+
+...because `$DISPLAY_` is not `$DISPLAY`
+
+`${variable:-fallback}` allows you to set a "fallback" variable to be substituted if `$variable` is not set.
+
+You can also use `${variable:=fallback}` to set that variable (in your current terminal).
+
+In Docker-OSX, we assume, `:0.0` is your default `$DISPLAY` variable.
+
+You can see what yours is
+
+```bash
+echo $DISPLAY
+```
+
+That way, `${DISPLAY:-:0.0}` will use whatever variable your X11 server has set for you, else `:0.0`
+
+### What is `-v /tmp/.X11-unix:/tmp/.X11-unix`?
+
+`-v` is a Docker command-line option that lets you pass a volume to the container.
+
+The directory that we are letting the Docker container use is a X server display socket.
+
+`/tmp/.X11-unix`
+
+If we let the Docker container use the same display socket as our own environment, then any applications you run inside the Docker container will show up on your screen too! [https://www.x.org/archive/X11R6.8.0/doc/RELNOTES5.html](https://www.x.org/archive/X11R6.8.0/doc/RELNOTES5.html)
+
+### ALSA errors on startup or container creation
+
+You may when initialising or booting into a container see errors from the `(qemu)` console of the following form: 
+`ALSA lib blahblahblah: (function name) returned error: no such file or directory`. These are more or less expected. As long as you are able to boot into the container and everything is working, no reason to worry about these.
+
+See also: [here](https://github.com/sickcodes/Docker-OSX/issues/174).
+```bash
+docker run -it \
+    --device /dev/kvm \
+    --device /dev/snd \
+    -p 50922:10022 \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    -e "DISPLAY=${DISPLAY:-:0.0}" \
+    sickcodes/docker-osx:latest
+
+# turn on SSH after you've installed OS X in the "Sharing" settings.
+ssh user@localhost -p 50922
+```
+
+#### Autoboot into OS X after you've installed everything
+
+Add the extra option `-e NOPICKER=true`.
+
+Old machines:
+
+```bash
+# find your containerID
+docker ps
+
+# move the no picker script on top of the Launch script
+# NEW CONTAINERS
+docker exec containerID mv ./Launch-nopicker.sh ./Launch.sh
+
+# VNC-VERSION-CONTAINER
+docker exec containerID mv ./Launch-nopicker.sh ./Launch_custom.sh
+
+# LEGACY CONTAINERS
+docker exec containerID bash -c "grep -v InstallMedia ./Launch.sh > ./Launch-nopicker.sh
+chmod +x ./Launch-nopicker.sh
+sed -i -e s/OpenCore\.qcow2/OpenCore\-nopicker\.qcow2/ ./Launch-nopicker.sh
+"
+```
+
+
+
+### The big-sur image starts slowly after installation. Is this expected?
+
+Automatic updates are still on in the container's settings. You may wish to turn them off. [We have future plans for development around this.](https://github.com/sickcodes/Docker-OSX/issues/227)
+
+### What is `${DISPLAY:-:0.0}`?
+
+`$DISPLAY` is the shell variable that refers to your X11 display server.
+
+`${DISPLAY}` is the same, but allows you to join variables like this:
+
+- e.g. `${DISPLAY}_${DISPLAY}` would print `:0.0_:0.0`
+- e.g. `$DISPLAY_$DISPLAY`     would print `:0.0`
+
+...because `$DISPLAY_` is not `$DISPLAY`
+
+`${variable:-fallback}` allows you to set a "fallback" variable to be substituted if `$variable` is not set.
+
+You can also use `${variable:=fallback}` to set that variable (in your current terminal).
+
+In Docker-OSX, we assume, `:0.0` is your default `$DISPLAY` variable.
+
+You can see what yours is
+
+```bash
+echo $DISPLAY
+```
+
+That way, `${DISPLAY:-:0.0}` will use whatever variable your X11 server has set for you, else `:0.0`
+
+### What is `-v /tmp/.X11-unix:/tmp/.X11-unix`?
+
+`-v` is a Docker command-line option that lets you pass a volume to the container.
+
+The directory that we are letting the Docker container use is a X server display socket.
+
+`/tmp/.X11-unix`
+
+If we let the Docker container use the same display socket as our own environment, then any applications you run inside the Docker container will show up on your screen too! [https://www.x.org/archive/X11R6.8.0/doc/RELNOTES5.html](https://www.x.org/archive/X11R6.8.0/doc/RELNOTES5.html)
+
+### ALSA errors on startup or container creation
+
+You may when initialising or booting into a container see errors from the `(qemu)` console of the following form: 
+`ALSA lib blahblahblah: (function name) returned error: no such file or directory`. These are more or less expected. As long as you are able to boot into the container and everything is working, no reason to worry about these.
+
+See also: [here](https://github.com/sickcodes/Docker-OSX/issues/174).
+```bash
+docker run -it \
+    --device /dev/kvm \
+    --device /dev/snd \
+    -p 50922:10022 \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    -e "DISPLAY=${DISPLAY:-:0.0}" \
+    sickcodes/docker-osx:latest
+
+# turn on SSH after you've installed OS X in the "Sharing" settings.
+ssh user@localhost -p 50922
+```
+
+#### Autoboot into OS X after you've installed everything
+
+Add the extra option `-e NOPICKER=true`.
+
+Old machines:
+
+```bash
+# find your containerID
+docker ps
+
+# move the no picker script on top of the Launch script
+# NEW CONTAINERS
+docker exec containerID mv ./Launch-nopicker.sh ./Launch.sh
+
+# VNC-VERSION-CONTAINER
+docker exec containerID mv ./Launch-nopicker.sh ./Launch_custom.sh
+
+# LEGACY CONTAINERS
+docker exec containerID bash -c "grep -v InstallMedia ./Launch.sh > ./Launch-nopicker.sh
+chmod +x ./Launch-nopicker.sh
+sed -i -e s/OpenCore\.qcow2/OpenCore\-nopicker\.qcow2/ ./Launch-nopicker.sh
+"
+```
+
+
+
+### The big-sur image starts slowly after installation. Is this expected?
+
+Automatic updates are still on in the container's settings. You may wish to turn them off. [We have future plans for development around this.](https://github.com/sickcodes/Docker-OSX/issues/227)
+
+### What is `${DISPLAY:-:0.0}`?
+
+`$DISPLAY` is the shell variable that refers to your X11 display server.
+
+`${DISPLAY}` is the same, but allows you to join variables like this:
+
+- e.g. `${DISPLAY}_${DISPLAY}` would print `:0.0_:0.0`
+- e.g. `$DISPLAY_$DISPLAY`     would print `:0.0`
+
+...because `$DISPLAY_` is not `$DISPLAY`
+
+`${variable:-fallback}` allows you to set a "fallback" variable to be substituted if `$variable` is not set.
+
+You can also use `${variable:=fallback}` to set that variable (in your current terminal).
+
+In Docker-OSX, we assume, `:0.0` is your default `$DISPLAY` variable.
+
+You can see what yours is
+
+```bash
+echo $DISPLAY
+```
+
+That way, `${DISPLAY:-:0.0}` will use whatever variable your X11 server has set for you, else `:0.0`
+
+### What is `-v /tmp/.X11-unix:/tmp/.X11-unix`?
+
+`-v` is a Docker command-line option that lets you pass a volume to the container.
+
+The directory that we are letting the Docker container use is a X server display socket.
+
+`/tmp/.X11-unix`
+
+If we let the Docker container use the same display socket as our own environment, then any applications you run inside the Docker container will show up on your screen too! [https://www.x.org/archive/X11R6.8.0/doc/RELNOTES5.html](https://www.x.org/archive/X11R6.8.0/doc/RELNOTES5.html)
+
+### ALSA errors on startup or container creation
+
+You may when initialising or booting into a container see errors from the `(qemu)` console of the following form: 
+`ALSA lib blahblahblah: (function name) returned error: no such file or directory`. These are more or less expected. As long as you are able to boot into the container and everything is working, no reason to worry about these.
+
+See also: [here](https://github.com/sickcodes/Docker-OSX/issues/174).
+```bash
+docker run -it \
+    --device /dev/kvm \
+    --device /dev/snd \
+    -p 50922:10022 \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    -e "DISPLAY=${DISPLAY:-:0.0}" \
+    sickcodes/docker-osx:latest
+
+# turn on SSH after you've installed OS X in the "Sharing" settings.
+ssh user@localhost -p 50922
+```
+
+#### Autoboot into OS X after you've installed everything
+
+Add the extra option `-e NOPICKER=true`.
+
+Old machines:
+
+```bash
+# find your containerID
+docker ps
+
+# move the no picker script on top of the Launch script
+# NEW CONTAINERS
+docker exec containerID mv ./Launch-nopicker.sh ./Launch.sh
+
+# VNC-VERSION-CONTAINER
+docker exec containerID mv ./Launch-nopicker.sh ./Launch_custom.sh
+
+# LEGACY CONTAINERS
+docker exec containerID bash -c "grep -v InstallMedia ./Launch.sh > ./Launch-nopicker.sh
+chmod +x ./Launch-nopicker.sh
+sed -i -e s/OpenCore\.qcow2/OpenCore\-nopicker\.qcow2/ ./Launch-nopicker.sh
+"
+```
+
+
+
+### The big-sur image starts slowly after installation. Is this expected?
+
+Automatic updates are still on in the container's settings. You may wish to turn them off. [We have future plans for development around this.](https://github.com/sickcodes/Docker-OSX/issues/227)
+
+### What is `${DISPLAY:-:0.0}`?
+
+`$DISPLAY` is the shell variable that refers to your X11 display server.
+
+`${DISPLAY}` is the same, but allows you to join variables like this:
+
+- e.g. `${DISPLAY}_${DISPLAY}` would print `:0.0_:0.0`
+- e.g. `$DISPLAY_$DISPLAY`     would print `:0.0`
+
+...because `$DISPLAY_` is not `$DISPLAY`
+
+`${variable:-fallback}` allows you to set a "fallback" variable to be substituted if `$variable` is not set.
+
+You can also use `${variable:=fallback}` to set that variable (in your current terminal).
+
+In Docker-OSX, we assume, `:0.0` is your default `$DISPLAY` variable.
+
+You can see what yours is
+
+```bash
+echo $DISPLAY
+```
+
+That way, `${DISPLAY:-:0.0}` will use whatever variable your X11 server has set for you, else `:0.0`
+
+### What is `-v /tmp/.X11-unix:/tmp/.X11-unix`?
+
+`-v` is a Docker command-line option that lets you pass a volume to the container.
+
+The directory that we are letting the Docker container use is a X server display socket.
+
+`/tmp/.X11-unix`
+
+If we let the Docker container use the same display socket as our own environment, then any applications you run inside the Docker container will show up on your screen too! [https://www.x.org/archive/X11R6.8.0/doc/RELNOTES5.html](https://www.x.org/archive/X11R6.8.0/doc/RELNOTES5.html)
+
+### ALSA errors on startup or container creation
+
+You may when initialising or booting into a container see errors from the `(qemu)` console of the following form: 
+`ALSA lib blahblahblah: (function name) returned error: no such file or directory`. These are more or less expected. As long as you are able to boot into the container and everything is working, no reason to worry about these.
+
+See also: [here](https://github.com/sickcodes/Docker-OSX/issues/174).
